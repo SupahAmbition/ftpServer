@@ -10,5 +10,13 @@ Currently the program is seperated into two, a server and a client application. 
 * ./tests/ 		->  The directory that holds all the files we will be testing with. 
 
 
+## MAKEFILE RULES 
+* make 		-> compile both programs into executables. 
+* client 	-> compile just the client. 
+* server 	-> compile jus the server. 
+* clean 	-> removes all compiled, and object files. 
+
+
 ## TESTCASES 
 * test1 		-> What it tests/ and associated expected file hash to ensure file is intact. 
+
