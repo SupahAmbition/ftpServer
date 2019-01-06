@@ -1,15 +1,15 @@
 CC=gcc
-++=g++
-CFLAGS= -pipe -g
+CPP=g++
+CFLAGS= -std=c++11
 
 all: client server
 
 
 client: ftpClient.o
-	$(CC) $(CLFAGS) ftpClient.o -o client
+	$(CPP) $(CLFAGS) ftpClient.o -o client
 
 server: ftpServer.o
-	$(CC) $(CLFAGS) ftpServer.o -o server
+	$(CPP) $(CLFAGS) ftpServer.o -o server
 
 
 clean: 
