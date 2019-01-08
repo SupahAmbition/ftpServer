@@ -26,7 +26,7 @@ int main( int argc, char* argv[] )
 {
 
 
-	/* GNU GETOPT  
+	/* GNU GETOPT */
 	int opt;
 	while ( (opt = getopt (argc, argv, "") ) != -1)
 	{
@@ -39,30 +39,12 @@ int main( int argc, char* argv[] )
 				 printf("%c is not an option", opt); 
 				 break; 
 		}
-	}*/
+	}
 
 	 std::string input;
 
 	try
  	{
-	    boost::asio::io_context io_context;
-
-	    tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 13));
-
-	    printf("Listening for connections\n");
-	    for(;;)
-	 	{
-            tcp::socket socket(io_context);
-	        acceptor.accept(socket);
-
-	        printf("Client connected! Sending message...\n");
-	        std::string message = "Hello Client!\n";
-
-	        boost::system::error_code ignored_error;
-	        boost::asio::write(socket, boost::asio::buffer(message), ignored_error);
-       
-	    }
-	    printf("TEST");
 
 	}
     catch (std::exception& e)
