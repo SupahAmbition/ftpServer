@@ -41,10 +41,30 @@ int main( int argc, char* argv[] )
 		}
 	}
 
-	 std::string input;
-
 	try
  	{
+		boost::asio::io_context; 
+
+		//accept connections on port 20 
+		tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 20) );
+
+		printf("Listening for connections\n"); 
+		while(true)
+		{
+			//accept connections on the socket. 
+			tcp::socket socket(io_context);
+			acceptor.accept(socket); 
+
+			printf("Client Connected\n"); 
+			
+
+			//create the message to send. 
+			/*
+			boost::system::error_code ignored_error;
+			boost::asio::buffer buffer( message )
+			boost::asio::write(socket, buffer, ignored_error);
+			*/
+		}
 
 	}
     catch (std::exception& e)
