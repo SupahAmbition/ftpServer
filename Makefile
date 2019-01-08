@@ -6,10 +6,10 @@ all: client server
 
 
 client: ftpClient.o
-	$(CPP) $(CLFAGS) ftpClient.o -o client
+	$(CPP) $(CLFAGS) ftpClient.o -o client -lpthread
 
 server: ftpServer.o
-	$(CPP) $(CLFAGS) ftpServer.o -o server
+	$(CPP) $(CLFAGS) ftpServer.o -o server -lpthread
 
 
 clean: 
