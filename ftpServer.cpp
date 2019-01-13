@@ -3,9 +3,9 @@
 #include <unistd.h>
 #include <iostream>
 #include <string>
-#include <boost/asio.hpp>
-
-using boost::asio::ip::tcp;
+#include <sys/socket.h> 
+#include <arpa/inet.h>
+#include <netinet/in.h> 
 
 /* PROGRAM OVERVIEW  
  *
@@ -45,43 +45,61 @@ int main( int argc, char* argv[] )
 				break; 
 		}
 	}
-
-	try
- 	{
-		boost::asio::io_context io_context; 
-
-		//accept connections on port 20 
-		tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 20) );
-
-		printf("Listening for connections\n"); 
-		while(true)
-		{
-			//accept connections on the socket. 
-			tcp::socket socket(io_context);
-			acceptor.accept(socket); 
-
-			printf("Client Connected\n"); 
+	
+	int socketfd, new_socket, valueRead; 
+	struct sockaddr_in address; 
+	int addrlen = sizeof(address); 
+	char buffer[1024]; 
 
 
-			//create the message to send. 
-			boost::system::error_code ignored_error;
+	//create the socket - IPv4 and TCP
+	socketfd = socket(AF_INET, SOCK_STREAM,  0); 
 
-			fseek(file, 0, SEEK_END); 
-			size_t fileLength = ftell(file);  
-			rewind(file); 
-			
-			boost::asio::mutable_buffer buffer(file, fileLength);
-
-			boost::asio::write(socket, buffer, ignored_error);
-			
-			fclose(file); 
-		}
-
+	if(socketfd == 0)
+	{
+		perror("Failed to create the socket.");
+		exit(1); 
 	}
-    catch (std::exception& e)
-    {
-    	std::cerr << e.what() << std::endl;
-    }
+
+	//fill in the address struct. 
+	address.sin_family = AF_INET;
+	address.sin_port = htons(20); 
+	inet_pton(AF_INET, "10.0.0.1", &address.sin_addr); 
+
+
+	//bind the socket to an address
+	int bindResult = bind(socketfd, (struct sockaddr*) &address, (socklen_t)addrlen );   
+	
+	if(bindResult > 0)
+	{
+		perror("Failed to bind to specified address."); 
+		exit(1); 
+	}
+
+
+	//Listen for connections
+	int listenResult = listen( socketfd, 3 ); 
+
+	if( listenResult < 0)
+	{
+		perror("Failed to listen for a new connetion"); 
+		exit(1); 
+	}
+
+	//accept connections 
+	new_socket = accept( socketfd, (struct sockaddr*) &address, (socklen_t*)&addrlen ); 
+
+	if( new_socket < 0 )
+	{
+		perror("Failed to accept connection.");
+		exit(1); 
+	}
+	else
+	{
+		printf("Client Connected.\n"); 
+	}
+
+
 	return 0; 
 
 }
