@@ -21,6 +21,8 @@ using boost::asio::ip::tcp;
  *
  */
 
+FILE* file; 
+
 
 int main( int argc, char* argv[] )
 {
@@ -28,22 +30,25 @@ int main( int argc, char* argv[] )
 
 	/* GNU GETOPT */
 	int opt;
-	while ( (opt = getopt (argc, argv, "") ) != -1)
+	while ( (opt = getopt (argc, argv, "f:") ) != -1)
 	{
 		printf("Option is: %c \n", opt); 
 		printf("Optarg is: %s \n", optarg); 
 		switch (opt)
 		{
+			case 'f': 
+				file = fopen(optarg, "rb");
+				break; 
 
-		 	default: 
-				 printf("%c is not an option", opt); 
-				 break; 
+			default: 
+				printf("%c is not an option", opt); 
+				break; 
 		}
 	}
 
 	try
  	{
-		boost::asio::io_context; 
+		boost::asio::io_context io_context; 
 
 		//accept connections on port 20 
 		tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 20) );
@@ -59,11 +64,20 @@ int main( int argc, char* argv[] )
 			
 
 			//create the message to send. 
-			/*
+			
 			boost::system::error_code ignored_error;
-			boost::asio::buffer buffer( message )
+
+
+			fseek(file, 0, SEEK_END); 
+			size_t fileLength = ftell(file);  
+			rewind(file); 
+			
+			boost::asio::mutable_buffer buffer( file, fileLength);
+
+			printf("SENDING: %s\n", buffer.data());
 			boost::asio::write(socket, buffer, ignored_error);
-			*/
+			
+			fclose(file); 
 		}
 
 	}

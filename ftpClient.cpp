@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <iostream>
+#include <fstream>
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 
@@ -41,18 +42,20 @@ int main( int argc, char* argv[] )
 
 		while(true)
 		{
-			
-		    boost::array<char, 128> buf;
+			boost::array<char, 128> buf;
 		    boost::system::error_code error;
 
-		    size_t len = socket.read_some(boost::asio::buffer(buf), error);
+		    size_t len = socket.receive( boost::asio::buffer(buf), 0);
+			printf("RECIEVED: %s\n", buf.data()); 
 
 		    if (error == boost::asio::error::eof)
 		      break; // Connection closed cleanly by peer.
 		    else if (error)
-		      throw boost::system::system_error(error); // Some other error.
+				throw boost::system::system_error(error); // Some other error.
 
-		  	printf("%s", buf.data());
+			std::ofstream outfile("./recieve/test1.txt"); 
+			outfile << buf.data() << std::endl; 
+			printf("Successfull recieved file!\n"); 
 
 		}
 	}

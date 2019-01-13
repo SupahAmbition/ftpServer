@@ -8,6 +8,7 @@ Currently the program is seperated into two, a server and a client application. 
 * ftpclient.c	->  Run this program on the machine you want to recieve the file. 
 * ftpserver.c 	->  Run this program on the machine you want to host/send the files from. 
 * ./tests/ 		->  The directory that holds all the files we will be testing with. 
+* ./recieve/ 	->	The directory that holds files that have been sent from the server to the client for testing. 
 
 
 ## MAKEFILE RULES 
@@ -18,5 +19,6 @@ Currently the program is seperated into two, a server and a client application. 
 
 
 ## TESTCASES 
-* test1 		-> What it tests/ and associated expected file hash to ensure file is intact. 
+* test1 		-> Test basic file transfer functionallity.
+						Expected MD5sum -> 708da4e0f3f43e9f14180947c17a6409
 
