@@ -61,20 +61,17 @@ int main( int argc, char* argv[] )
 			acceptor.accept(socket); 
 
 			printf("Client Connected\n"); 
-			
+
 
 			//create the message to send. 
-			
 			boost::system::error_code ignored_error;
-
 
 			fseek(file, 0, SEEK_END); 
 			size_t fileLength = ftell(file);  
 			rewind(file); 
 			
-			boost::asio::mutable_buffer buffer( file, fileLength);
+			boost::asio::mutable_buffer buffer(file, fileLength);
 
-			printf("SENDING: %s\n", buffer.data());
 			boost::asio::write(socket, buffer, ignored_error);
 			
 			fclose(file); 

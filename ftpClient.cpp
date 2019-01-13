@@ -8,7 +8,6 @@
 
 using boost::asio::ip::tcp;
 
-
 int main( int argc, char* argv[] )
 {
 
@@ -40,24 +39,28 @@ int main( int argc, char* argv[] )
 	    tcp::socket socket(io_context);
 	    boost::asio::connect(socket, endpoints);
 
+		std::ofstream outfile("./recieve/test1.txt"); 
+	
 		while(true)
 		{
 			boost::array<char, 128> buf;
-		    boost::system::error_code error;
 
-		    size_t len = socket.receive( boost::asio::buffer(buf), 0);
-			printf("RECIEVED: %s\n", buf.data()); 
-
-		    if (error == boost::asio::error::eof)
-		      break; // Connection closed cleanly by peer.
-		    else if (error)
+			boost::system::error_code error;
+			
+			size_t len = socket.read_some(boost::asio::buffer(buf), error);
+			
+			if (error == boost::asio::error::eof)
+	  			break; // Connection closed cleanly by peer.
+			else if (error)
 				throw boost::system::system_error(error); // Some other error.
 
-			std::ofstream outfile("./recieve/test1.txt"); 
-			outfile << buf.data() << std::endl; 
-			printf("Successfull recieved file!\n"); 
+			outfile << buf.data();
+			printf("Recieved %d bytes.\n", (int)len);
 
 		}
+
+		outfile << std::endl;
+		printf("Successfully recieved file!\n"); 
 	}
 	catch (std::exception& e)
 	{
@@ -65,4 +68,7 @@ int main( int argc, char* argv[] )
 	}
 	return 0;
 
+
+
 }
+
