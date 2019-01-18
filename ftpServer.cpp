@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <iostream>
-#include <string>
+#include <string.h>
 #include <sys/socket.h> 
 #include <arpa/inet.h>
 #include <netinet/in.h> 
@@ -37,7 +37,7 @@ int main( int argc, char* argv[] )
 		switch (opt)
 		{
 			case 'f': 
-				file = fopen(optarg, "rb");
+				file = fopen(optarg, "r");
 				break; 
 
 			default: 
@@ -49,7 +49,6 @@ int main( int argc, char* argv[] )
 	int socketfd, new_socket, valueRead; 
 	struct sockaddr_in address; 
 	int addrlen = sizeof(address); 
-	char buffer[1024]; 
 
 
 	//create the socket - IPv4 and TCP
@@ -64,7 +63,7 @@ int main( int argc, char* argv[] )
 	//fill in the address struct. 
 	address.sin_family = AF_INET;
 	address.sin_port = htons(20); 
-	inet_pton(AF_INET, "10.0.0.1", &address.sin_addr); 
+	inet_pton(AF_INET, "10.0.0.1", &address.sin_addr); // translate the address from printable to binary form.  
 
 
 	//bind the socket to an address
@@ -96,10 +95,50 @@ int main( int argc, char* argv[] )
 	}
 	else
 	{
+
 		printf("Client Connected.\n"); 
+		
+		//If the client did connect then write the contents
+		//of the file to the connection. 
+		
+		fseek(file, 0, SEEK_END); 
+		int	fileLength = (int) ftell(file);  
+		rewind(file);
+
+
+		//while there are still bytes to read, then read from the file. 
+		while( fileLength > 0) 
+		{
+			int bytesRead; 
+			char buff[1024]; 
+
+			bytesRead = fread(buff, sizeof(char), 1024, file); 
+			fileLength = fileLength - bytesRead; 
+
+
+			//now write to the socket.
+			write(new_socket, buff, 1024); 
+			memset(buff, '0', 1024); 
+		}
+
+		close(new_socket); 
+
 	}
 
+	fclose(file); 
 
 	return 0; 
 
 }
+
+
+
+
+
+
+
+
+
+
+
+

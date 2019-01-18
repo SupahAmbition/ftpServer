@@ -3,10 +3,13 @@
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
-#include <boost/array.hpp>
-#include <boost/asio.hpp>
+#include <sys/socket.h> 
+#include <arpa/inet.h>
+#include <netinet/in.h> 
+#include <string.h>
 
-using boost::asio::ip::tcp;
+FILE* outFile; 
+
 
 int main( int argc, char* argv[] )
 {
@@ -26,49 +29,71 @@ int main( int argc, char* argv[] )
 		}
 	}
 	
-	
-	try
-    {
-	    boost::asio::io_context io_context;
+	int socketfd, valueRead;
+	struct sockaddr_in address; 
+	int addrlen = sizeof(address); 
 
-		//Resolve the address given from input. 
-		tcp::resolver resolver(io_context);
-	    tcp::resolver::results_type endpoints = resolver.resolve(argv[1], "20");
 
-		//create the socket and connect to the endpoint. 
-	    tcp::socket socket(io_context);
-	    boost::asio::connect(socket, endpoints);
+	socketfd = socket(AF_INET, SOCK_STREAM, 0); 
 
-		std::ofstream outfile("./recieve/test1.txt"); 
-	
-		while(true)
+	if(socketfd == 0)
+	{
+		perror("Failed to create the socket\n"); 
+		exit(1); 
+	}
+
+
+	//fill out the address struct. 
+	address.sin_family = AF_INET; 
+	address.sin_port = htons(20); 
+	inet_pton(AF_INET, argv[1], &address); 
+
+	//connect to the server
+	int connectResult = connect(socketfd, (struct sockaddr*) &address, (socklen_t)addrlen);
+
+	if( connectResult < 0)
+	{
+		perror("Falled to connect to specified address\n");
+		exit(1); 
+	}
+	else 
+	{
+		printf("Connected to server!\n"); 
+		char buff[1024]; 
+
+		outFile = fopen("./recieve/test1.txt", "w");
+
+		int bytesRead = 1; 
+		while(bytesRead > 0)
 		{
-			boost::array<char, 128> buf;
-
-			boost::system::error_code error;
-			
-			size_t len = socket.read_some(boost::asio::buffer(buf), error);
-			
-			if (error == boost::asio::error::eof)
-	  			break; // Connection closed cleanly by peer.
-			else if (error)
-				throw boost::system::system_error(error); // Some other error.
-
-			outfile << buf.data();
-			printf("Recieved %d bytes.\n", (int)len);
+			//read from the server into a buffer. 
+			bytesRead = read(socketfd, buff, 1024); 
+			fwrite(buff, sizeof(char), 1024, outFile); 
+		
+			printf("writing: %s\n", buff); 
+			memset(buff, '0', 1024);
 
 		}
 
-		outfile << std::endl;
-		printf("Successfully recieved file!\n"); 
+		fclose(outFile); 
+
+
 	}
-	catch (std::exception& e)
-	{
-		std::cerr << e.what() << std::endl; 
-	}
+
+	close(socketfd); 
+	
+
+
 	return 0;
 
-
-
 }
+
+
+
+
+
+
+
+
+
 
