@@ -1,11 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <iostream>
+#include <errno.h>
 #include <string.h>
-#include <sys/socket.h> 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
 #include <arpa/inet.h>
-#include <netinet/in.h> 
+#include <sys/wait.h>
+#include <signal.h>
+
 
 /* PROGRAM OVERVIEW  
  *
@@ -47,34 +52,53 @@ int main( int argc, char* argv[] )
 	}
 	
 	int socketfd, new_socket, valueRead; 
-	struct sockaddr_in address; 
-	int addrlen = sizeof(address); 
+	struct addrinfo hints, *servinfo, *p; 
+	struct sockaddr_storage their_addr; // connector's address information
+	socklen_t sin_size; 
 
+	memset(&hints, 0, sizeof(hints) ); 
+	hints.ai_family = AF_INET; //IPv4
+	hints.ai_socktype = SOCK_STREAM; //TCP
+	hints.ai_flags = AI_PASSIVE;
 
-	//create the socket - IPv4 and TCP
-	socketfd = socket(AF_INET, SOCK_STREAM,  0); 
+	int status = getaddrinfo( NULL, "20", &hints, &servinfo);
 
-	if(socketfd == 0)
+	if( status != 0)
 	{
-		perror("Failed to create the socket.");
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status) ); 
 		exit(1); 
 	}
 
-	//fill in the address struct. 
-	address.sin_family = AF_INET;
-	address.sin_port = htons(20); 
-	inet_pton(AF_INET, "10.0.0.1", &address.sin_addr); // translate the address from printable to binary form.  
 
-
-	//bind the socket to an address
-	int bindResult = bind(socketfd, (struct sockaddr*) &address, (socklen_t)addrlen );   
-	
-	if(bindResult > 0)
+	//loop through the results of getaddrinfo
+	for( p = servinfo; p != NULL; p = p->ai_next)
 	{
-		perror("Failed to bind to specified address."); 
-		exit(1); 
+		//create the socket - IPv4 and TCP
+		socketfd = socket(p->ai_family, p->ai_socktype,  p->ai_protocol); 
+
+		if(socketfd == -1)
+		{
+			perror("Failed to create the socket.");
+			continue; 
+		}
+
+		//attempt to bind the socket
+		if( bind(socketfd, p->ai_addr, p->ai_addrlen) == -1)
+		{
+			close(socketfd);
+			perror("Failed to bind to specifed address.");  
+			continue; 
+		}
+		break; 
+
 	}
 
+	freeaddrinfo(servinfo); 
+ 	if (p == NULL)  
+	{
+        fprintf(stderr, "server: failed to bind\n");
+        exit(1);
+    }
 
 	//Listen for connections
 	int listenResult = listen( socketfd, 3 ); 
@@ -85,47 +109,46 @@ int main( int argc, char* argv[] )
 		exit(1); 
 	}
 
-	//accept connections 
-	new_socket = accept( socketfd, (struct sockaddr*) &address, (socklen_t*)&addrlen ); 
 
-	if( new_socket < 0 )
+	while(true)
 	{
-		perror("Failed to accept connection.");
-		exit(1); 
-	}
-	else
-	{
+		sin_size = sizeof their_addr; 
+		new_socket = accept( socketfd, (struct sockaddr*) &their_addr, &sin_size); 
 
-		printf("Client Connected.\n"); 
-		
-		//If the client did connect then write the contents
-		//of the file to the connection. 
-		
-		fseek(file, 0, SEEK_END); 
-		int	fileLength = (int) ftell(file);  
-		rewind(file);
-
-
-		//while there are still bytes to read, then read from the file. 
-		while( fileLength > 0) 
+		if(new_socket == -1)
 		{
-			int bytesRead; 
-			char buff[1024]; 
+			perror("accept"); 
+			continue;
+		}
 
-			bytesRead = fread(buff, sizeof(char), 1024, file); 
-			fileLength = fileLength - bytesRead; 
+		if( !fork() ) // For the child process. 
+		{
+			close(socketfd); 
+	
+			fseek(file, 0, SEEK_END); 
+			int	fileLength = (int) ftell(file);  
+			rewind(file);
 
 
-			//now write to the socket.
-			write(new_socket, buff, 1024); 
-			memset(buff, '0', 1024); 
+			char buff[fileLength + 1];  // +1 for null terminated. 
+			fread(buff, sizeof(char), fileLength, file); 
+
+			fclose(file); 
+
+			int sendResult = send( new_socket, buff, fileLength, 0); 
+			if( sendResult == -1)
+			{
+				perror("Send"); 
+			}
+
+			printf("Sent %d bytes\n", sendResult); 
+			close(new_socket); 
+			exit(0); 
 		}
 
 		close(new_socket); 
 
 	}
-
-	fclose(file); 
 
 	return 0; 
 

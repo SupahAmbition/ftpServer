@@ -1,12 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <iostream>
-#include <fstream>
-#include <sys/socket.h> 
-#include <arpa/inet.h>
-#include <netinet/in.h> 
+#include <errno.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <sys/wait.h>
+#include <signal.h>
+
 
 FILE* outFile; 
 
@@ -29,36 +33,54 @@ int main( int argc, char* argv[] )
 		}
 	}
 	
-	int socketfd, valueRead;
-	struct sockaddr_in address; 
-	int addrlen = sizeof(address); 
+	int socketfd, new_socket, valueRead; 
+	struct addrinfo hints,  *servinfo, *p;
 
+	memset(&hints, 0, sizeof(hints) ); 
+	hints.ai_family = AF_INET; //IPv4
+	hints.ai_socktype = SOCK_STREAM; //TCP
 
-	socketfd = socket(AF_INET, SOCK_STREAM, 0); 
+	int status = getaddrinfo( argv[1], "20", &hints, &servinfo);
 
-	if(socketfd == 0)
+	if(status != 0)
 	{
-		perror("Failed to create the socket\n"); 
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status) ); 
 		exit(1); 
 	}
 
 
-	//fill out the address struct. 
-	address.sin_family = AF_INET; 
-	address.sin_port = htons(20); 
-	inet_pton(AF_INET, argv[1], &address); 
-
-	//connect to the server
-	int connectResult = connect(socketfd, (struct sockaddr*) &address, (socklen_t)addrlen);
-
-	if( connectResult < 0)
+	for( p = servinfo; p != NULL; p = p->ai_next)
 	{
-		perror("Falled to connect to specified address\n");
+		socketfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+		if( socketfd == -1) 
+		{
+			perror("client: socket");
+			continue;
+		}
+
+
+		//conect to the server 	
+		int connectionResult = connect(socketfd, p->ai_addr, p->ai_addrlen);
+		if ( connectionResult == -1) 
+		{
+			close(socketfd);
+			perror("client: connect");
+			continue;
+		}
+		break; 
+	}
+
+
+	if(p == NULL)
+	{
+		fprintf(stderr, "Failed to connect to the server\n"); 
 		exit(1); 
 	}
-	else 
+	else
 	{
+
 		printf("Connected to server!\n"); 
+		freeaddrinfo(servinfo); 
 		char buff[1024]; 
 
 		outFile = fopen("./recieve/test1.txt", "w");
@@ -67,22 +89,17 @@ int main( int argc, char* argv[] )
 		while(bytesRead > 0)
 		{
 			//read from the server into a buffer. 
-			bytesRead = read(socketfd, buff, 1024); 
-			fwrite(buff, sizeof(char), 1024, outFile); 
-		
-			printf("writing: %s\n", buff); 
+			bytesRead = recv(socketfd, buff, 1024, 0); 
+			fwrite(buff, sizeof(char), bytesRead, outFile); 
+
+			printf("writing: %d bytes\n", bytesRead); 
 			memset(buff, '0', 1024);
 
 		}
-
 		fclose(outFile); 
-
-
 	}
 
 	close(socketfd); 
-	
-
 
 	return 0;
 
