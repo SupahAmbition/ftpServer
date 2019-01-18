@@ -20,5 +20,9 @@ Currently the program is seperated into two, a server and a client application. 
 
 ## TESTCASES 
 * test1 		-> Test basic file transfer functionallity.
-						Expected MD5sum -> 708da4e0f3f43e9f14180947c17a6409
+						Expected MD5sum -> 708da4e0f3f43e9f14180947c17a6409 
+
+
+
+
 
