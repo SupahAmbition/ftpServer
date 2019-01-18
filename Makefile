@@ -16,3 +16,4 @@ clean:
 	rm -rf *.o
 	rm -rf server
 	rm -rf client
+	rm -rf ./recieve/test1.txt
