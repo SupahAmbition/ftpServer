@@ -59,6 +59,7 @@ int createConnection( char* address,  char* port )
 	hints.ai_socktype = SOCK_STREAM; //TCP
 	int status = getaddrinfo( address, port, &hints, &servinfo);
 
+
 	if(status != 0)
 	{
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status) ); 
