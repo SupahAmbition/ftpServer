@@ -11,7 +11,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 
-#define PORT 20 
+#define PORT 21
 #define BACKLOG 3
 
 

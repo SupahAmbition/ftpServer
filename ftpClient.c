@@ -11,6 +11,8 @@
 #include <sys/wait.h>
 #include <signal.h>
 
+#define PORT "21"
+
 
 FILE* outFile; 
 
@@ -40,7 +42,7 @@ int main( int argc, char* argv[] )
 	hints.ai_family = AF_INET; //IPv4
 	hints.ai_socktype = SOCK_STREAM; //TCP
 
-	int status = getaddrinfo( argv[1], "20", &hints, &servinfo);
+	int status = getaddrinfo( argv[1], PORT, &hints, &servinfo);
 
 	if(status != 0)
 	{
