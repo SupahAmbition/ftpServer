@@ -11,7 +11,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 
-#define PORT 20 
+#define PORT "20"
 #define BACKLOG 3
 
 
@@ -59,14 +59,13 @@ int sendFile( int new_socket, FILE* inFile)
 
 /* This function will create a socket and bind it
  * to the specified port on the host machine. 
- * it will return a pointer to the socket that was 
+ * it will return a the socketfd that was successfully created  
  * successfully binded. */
-int createConnection(int portNum)
+int createConnection(char* port )
 {
 
 	int socketfd;
 	struct addrinfo hints, *servinfo, *p; 
-	char port[10]; 
 
 	memset(&hints, 0, sizeof(hints) ); 
 	hints.ai_family = AF_INET; //IPv4
@@ -74,7 +73,6 @@ int createConnection(int portNum)
 	hints.ai_flags = AI_PASSIVE; //use own address 
 
 
-	sprintf( port, "%d", portNum ); 
 	int status = getaddrinfo( NULL, port,  &hints, &servinfo);
 
 	if( status != 0)
@@ -113,7 +111,7 @@ int createConnection(int portNum)
 	freeaddrinfo(servinfo); 
  	if (p == NULL)  
 	{
-        fprintf(stderr, "server: failed to bind to port %d\n", portNum);
+        fprintf(stderr, "server: failed to bind to port %s\n", port );
         exit(1);
     }
 	else 
