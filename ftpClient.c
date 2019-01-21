@@ -109,7 +109,8 @@ int main( int argc, char* argv[] )
 {
 	FILE* outFile; 
 	char* address; 
-
+	int socketfd; 
+	
 	address = argv[1]; 
 
 	/* GNU GETOPT USEAGE  */ 
@@ -139,10 +140,81 @@ int main( int argc, char* argv[] )
 		}
 	}
 
-	int socketfd; 
-	
-	socketfd = createConnection( address, PORT);	
-	printf("Connected to server!\n"); 
+	//iteractive command line loop
+	while( 1 ) 
+	{
+		char command[100]; 
+
+		printf("<ftpClient>"); 
+		scanf("%s", command); 
+
+		printf("command was %s\n", command); 
+
+		
+		
+		
+		/* 		identify and execute the command. 		*/
+		if (strcmp( command, "help" ) == 0)
+		{
+			//print the list of commands. 
+		}
+		else if( strcmp( command, "connect" ) == 0 )
+		{
+			//connect to the server 
+
+			socketfd = createConnection( address, PORT);	
+			printf("Connected to server!\n"); 
+		}
+		else if( strcmp( command, "quit" ) == 0 )
+		{
+			//disconnect from the server
+		}
+		else if( strcmp( command, "pwd"  ) == 0 )
+		{
+			//print the current working directory. 
+			
+		}
+		else if( strcmp( command, "cd" ) == 0 )
+		{
+			//change the current directory.
+		}
+		else if( strcmp( command, "ls" ) == 0 )
+		{
+			//the the contents of the current directory. 
+		}
+		else if( strcmp( command, "recieve" ) == 0 ) 
+		{
+			//recieve the specified file from the server. 
+		}
+		else if( strcmp( command, "space available") == 0 )
+		{
+			//get the disk space available on the server. 
+		}
+		else if( strcmp( command, "clear" ) == 0 )
+		{
+			//clear the screen 
+			//system("cls");  <--- windows 
+			system("clear");  // <--- Unix 
+		}
+		else if( strcmp( command, "mkdir" ) == 0 ) 
+		{
+			//create a directory. 
+		}
+		else if( strcmp( command, "undo" ) == 0 )
+		{
+			// undo the last command 
+		}
+		else if( strcmp( commnad, "rename" ) == 0) 
+		{
+			//rename the specifed file or directory 
+		}
+
+
+
+		free(command);  
+		continue; 
+	}
+
 
 	recieveFile(socketfd, outFile); 
 
