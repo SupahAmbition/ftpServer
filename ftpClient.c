@@ -204,14 +204,13 @@ int main( int argc, char* argv[] )
 		{
 			// undo the last command 
 		}
-		else if( strcmp( commnad, "rename" ) == 0) 
+		else if( strcmp( command, "rename" ) == 0) 
 		{
 			//rename the specifed file or directory 
 		}
 
 
 
-		free(command);  
 		continue; 
 	}
 
