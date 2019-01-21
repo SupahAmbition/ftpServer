@@ -64,7 +64,7 @@ int createConnection(int portNum)
 
 	int socketfd;
 	struct addrinfo hints, *servinfo, *p; 
-	char* port; 
+	char port[10]; 
 
 	memset(&hints, 0, sizeof(hints) ); 
 	hints.ai_family = AF_INET; //IPv4
