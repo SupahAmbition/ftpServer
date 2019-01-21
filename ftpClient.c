@@ -146,7 +146,7 @@ int main( int argc, char* argv[] )
 		char command[100]; 
 
 		printf("<ftpClient>"); 
-		scanf("%s", command); 
+		int scanfResult = scanf("%s", command); 
 
 		printf("command was %s\n", command); 
 
@@ -207,6 +207,11 @@ int main( int argc, char* argv[] )
 		else if( strcmp( command, "rename" ) == 0) 
 		{
 			//rename the specifed file or directory 
+		}
+		else if( scanfResult == EOF)
+		{
+			printf("Quiting now\n"); 
+			exit(1); 
 		}
 
 
