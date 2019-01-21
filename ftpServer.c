@@ -52,6 +52,8 @@ int sendFile( int new_socket, FILE* inFile)
 	printf("Sent %d bytes\n", sendResult); 
 	close(new_socket); 
 	exit(0); 
+
+	free(buff); 
 }
 
 
@@ -182,8 +184,9 @@ int main( int argc, char* argv[] )
 			close(socketfd); 
 		}
 		close(new_socket); 
-		fclose(file);
+
 	}
+	fclose(file);
 
 	return 0; 
 
