@@ -1,0 +1,15 @@
+
+
+CLIENT FUNCTIONS:
+
+GetAvailableFiles()
+// Gets a list, (in vector form?) of filenames available for the client to download
+// These filenames should be in string format, and will be used by the GUI
+
+RequestFile(string filename, string destPath)
+//Sends one filename to the server that is chosen by the client from the list earlier recieved
+//The server will need to convert this filename into a full path to the file, and use that
+//full path to start the sending process like we already have working.
+//"destPath" will be used as the destination path for where the file should be stored client-side
+//(including the new name of the file)
+
