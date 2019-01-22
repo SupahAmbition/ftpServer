@@ -156,6 +156,7 @@ int main( int argc, char* argv[] )
 	//iteractive command line loop
 	while( 1 ) 
 	{
+		//test
 		char command[100]; 
 
 		printf("<ftpClient>"); 
