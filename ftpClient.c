@@ -15,6 +15,21 @@
 
 
 
+int sendCommand(int socketfd, char* command)
+{
+	int length = strlen(command); 
+
+	int sendResult = send( socketfd, command, length, 0); 
+
+	if( sendResult == -1)
+	{
+		perror("sendCommand"); 
+	}
+	//printf("Send command %s\n", command); 
+
+}	
+
+
 /* Recieve a file from the server, 
  * read in only 1024 bytes at a time */
 int recieveFile( int socketfd, FILE* outFile )
@@ -45,9 +60,8 @@ int recieveFile( int socketfd, FILE* outFile )
 
 
 /* This function will create a socket and bind it
- * to the specified port on the host machine. 
- * it will return a the socketfd that was successfully created  
- * successfully binded. */
+ * to the specified address on port 20.  
+ * it will return a the socketfd that was successfully created   */
 int createConnection( char* address,  char* port )
 {
 
@@ -75,7 +89,6 @@ int createConnection( char* address,  char* port )
 			perror("client: socket");
 			continue;
 		}
-
 
 		//conect to the server 	
 		int connectionResult = connect(socketfd, p->ai_addr, p->ai_addrlen);
@@ -148,9 +161,8 @@ int main( int argc, char* argv[] )
 		printf("<ftpClient>"); 
 		int scanfResult = scanf("%s", command); 
 
-		printf("command was %s\n", command); 
+		//printf("command was %s\n", command); 
 
-		
 		
 		
 		/* 		identify and execute the command. 		*/
@@ -162,6 +174,9 @@ int main( int argc, char* argv[] )
 		{
 			//connect to the server 
 
+			printf("IPv4 Address to connect to: "); 
+			scanf("%s", address); 
+		
 			socketfd = createConnection( address, PORT);	
 			printf("Connected to server!\n"); 
 		}
@@ -172,15 +187,27 @@ int main( int argc, char* argv[] )
 		else if( strcmp( command, "pwd"  ) == 0 )
 		{
 			//print the current working directory. 
+			if(socketfd != -1)
+			{
+				sendCommand(socketfd, "pwd"); 
+			}
 			
 		}
 		else if( strcmp( command, "cd" ) == 0 )
 		{
 			//change the current directory.
+			if(socketfd != -1)
+			{
+				sendCommand(socketfd, "cd"); 
+			}
 		}
 		else if( strcmp( command, "ls" ) == 0 )
 		{
 			//the the contents of the current directory. 
+			if(socketfd != -1)
+			{
+				sendCommand(socketfd, "ls"); 
+			}
 		}
 		else if( strcmp( command, "recieve" ) == 0 ) 
 		{
@@ -208,13 +235,11 @@ int main( int argc, char* argv[] )
 		{
 			//rename the specifed file or directory 
 		}
-		else if( scanfResult == EOF)
+		else if( scanfResult == EOF) // ctrl + d
 		{
 			printf("Quiting now\n"); 
 			exit(1); 
 		}
-
-
 
 		continue; 
 	}
