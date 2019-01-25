@@ -17,6 +17,12 @@
 
 int sendCommand(int socketfd, char* command)
 {
+	if(socketfd == -1)
+	{
+		fprintf(stderr, "Was not able to send command because socket was invalid\n"); 
+		exit(1);
+	}
+
 	int length = strlen(command); 
 
 	int sendResult = send( socketfd, command, length, 0); 
@@ -32,13 +38,12 @@ int sendCommand(int socketfd, char* command)
 
 /* Recieve a file from the server, 
  * read in only 1024 bytes at a time */
-int recieveFile( int socketfd, FILE* outFile )
+int recvFile( int socketfd, FILE* outFile )
 {
 	if(outFile == NULL)
 	{
-		outFile = fopen("./recieve/test1.txt", "w"); 
+		outFile = fopen("./recieve/default.txt", "w"); 
 	}
-
 
 	char buff[1024]; 
 	int bytesRead = 1; 
@@ -50,7 +55,6 @@ int recieveFile( int socketfd, FILE* outFile )
 
 		printf("writing: %d bytes\n", bytesRead); 
 		memset(buff, '0', 1024);
-
 	}
 
 	fclose(outFile); 
@@ -162,7 +166,6 @@ int main( int argc, char* argv[] )
 		int scanfResult = scanf("%s", command); 
 
 		//printf("command was %s\n", command); 
-
 		
 		
 		/* 		identify and execute the command. 		*/
@@ -173,7 +176,6 @@ int main( int argc, char* argv[] )
 		else if( strcmp( command, "connect" ) == 0 )
 		{
 			//connect to the server 
-
 			printf("IPv4 Address to connect to: "); 
 			scanf("%s", address); 
 		
@@ -189,7 +191,7 @@ int main( int argc, char* argv[] )
 			//print the current working directory. 
 			if(socketfd != -1)
 			{
-				sendCommand(socketfd, "pwd"); 
+				sendCommand(socketfd, "PWD"); 
 			}
 			
 		}
@@ -198,24 +200,46 @@ int main( int argc, char* argv[] )
 			//change the current directory.
 			if(socketfd != -1)
 			{
-				sendCommand(socketfd, "cd"); 
+				sendCommand(socketfd, "CWD"); 
 			}
 		}
 		else if( strcmp( command, "ls" ) == 0 )
 		{
 			//the the contents of the current directory. 
-			if(socketfd != -1)
-			{
-				sendCommand(socketfd, "ls"); 
-			}
+
+			sendCommand(socketfd, "LST "); 
 		}
 		else if( strcmp( command, "recieve" ) == 0 ) 
 		{
 			//recieve the specified file from the server. 
+			char recieveFile[100]; 	
+			char filePath[100]; 
+			FILE* file; 
+
+			sendCommand(socketfd, "RETR"); 
+		
+			printf("Name of the file to get from the server:"); 
+			scanf("%s", recieveFile); 
+			if( socketfd != -1)
+			{
+				int bytesSent;
+				bytesSent = send(socketfd, recieveFile, strlen(recieveFile), 0); 
+
+				printf("\nWhere to save file?"); 
+				scanf("%s", filePath); 
+
+				file = fopen(filePath, "w"); 
+	
+				recvFile(socketfd, file); 
+			}
+
+
 		}
 		else if( strcmp( command, "space available") == 0 )
 		{
 			//get the disk space available on the server. 
+			
+			sendCommand( socketfd, "SIZE"); 
 		}
 		else if( strcmp( command, "clear" ) == 0 )
 		{
@@ -243,9 +267,6 @@ int main( int argc, char* argv[] )
 
 		continue; 
 	}
-
-
-	recieveFile(socketfd, outFile); 
 
 	close(socketfd); 
 

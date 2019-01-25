@@ -52,7 +52,6 @@ int sendFile( int new_socket, FILE* inFile)
 	printf("Sent %d bytes\n", sendResult); 
 	close(new_socket); 
 	exit(0); 
-
 	free(buff); 
 }
 
@@ -120,6 +119,66 @@ int createConnection(char* port )
 	}
 }
 
+int executeCommand( int socketfd, char* command )
+{
+
+	//identify the command and then call it's associated function 
+	if( strcmp( command, "RETR" ) == 0)
+	{
+		FILE* file; 
+		char fileName[100]; 
+		int bytesRead;
+		//recieve the name of the file that the client wants us to send. 
+
+		bytesRead = recv( socketfd, fileName, 100, 0); 
+		
+		//check that it actually is a file. 
+		file = fopen(fileName, "r");
+		if( !file )
+		{
+			fprintf( stderr, "Was not able to open file that the client requested. File Name: %s. \n", fileName); 
+			exit(1); 
+		}
+
+		//call send File with the socket we are using, and the file the clinet wants. 
+		sendFile(socketfd, file);  
+		fclose(file); 
+	}
+	else if( strcmp( command, "PWD" ) == 0 ) 
+	{
+
+	}
+	else if( strcmp( command, "CWD") == 0 )
+	{
+
+	}
+	else if( strcmp( command, "LST") == 0 )
+	{
+
+	}
+	else if( strcmp( command, "SIZE") == 0 )
+	{
+
+	}	
+	else if( strcmp( command, "FSZE" ) == 0)
+	{
+
+	}	
+	else if( strcmp( command, "MKD" ) == 0) 
+	{
+
+	}
+	else if( strcmp( command, "RNTO") == 0)
+	{
+
+	}
+	else
+	{
+		//command was not recognized. 
+	}
+}
+
+
 
 int main( int argc, char* argv[] )
 {
@@ -165,6 +224,7 @@ int main( int argc, char* argv[] )
 		exit(1); 
 	}
 
+	//listen for connections. 
 	while( 1 )
 	{
 		sin_size = sizeof their_addr; 
@@ -172,14 +232,28 @@ int main( int argc, char* argv[] )
 
 		if(new_socket == -1)
 		{
-			perror("server: was not able to accept connetion.\n"); 
+			perror("server.main"); 
 			continue;
 		}
 
 		if( !fork() ) // For the child process. 
 		{
-			sendFile(new_socket, file);
+
 			close(socketfd); 
+		
+			//client / server interaction 
+			while(1) 
+			{
+				//recieve the command. 	
+				char command[4]; 
+				int bytesRecv = 0; 
+		
+				bytesRecv = recv(new_socket, command, 4, 0);
+				//maybe check how many bytes are recieved. 
+
+				executeCommand(new_socket, command); 
+			}
+
 		}
 		close(new_socket); 
 
