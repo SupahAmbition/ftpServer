@@ -36,17 +36,41 @@ int sendCommand(int socketfd, char* command)
 }	
 
 
-/* Recieve a file from the server, 
- * read in only 1024 bytes at a time */
-int recvFile( int socketfd, FILE* outFile )
-{
-	if(outFile == NULL)
-	{
-		outFile = fopen("./recieve/default.txt", "w"); 
-	}
 
+
+
+
+
+
+
+
+
+
+
+
+
+/* Recieve a file from the server, 
+ * reads in only 1024 bytes at a time */
+int recvFile( int socketfd, char* filePath )
+{
+	FILE* outFile; 
 	char buff[1024]; 
 	int bytesRead = 1; 
+	
+	
+	//open the file for writing. 
+	outFile = fopen(filePath, "w"); 
+
+	if( !outFile )
+	{
+		char defaultPath[] = "./recieve/default.txt";  
+
+		printf("client.sendFile: Was not able to open file (%s) for writing\n", filePath);
+		printf("Opening %s for writing instead", defaultPath );  
+
+		outFile = fopen(defaultPath, "w"); 
+	}
+
 	while(bytesRead > 0)
 	{
 		//read from the server into a buffer. 
@@ -59,7 +83,6 @@ int recvFile( int socketfd, FILE* outFile )
 
 	fclose(outFile); 
 	return 0; 
-
 }
 
 
@@ -116,6 +139,7 @@ int createConnection( char* address,  char* port )
 	}
 	else 
 	{
+		printf("Connected to server!\n"); 
 		return socketfd;
 	}
 
@@ -161,11 +185,14 @@ int main( int argc, char* argv[] )
 	while( 1 ) 
 	{
 		char command[100]; 
-
+		char* fgetsResult; 
+		
+		
 		printf("<ftpClient>"); 
-		int scanfResult = scanf("%s", command); 
-
-		//printf("command was %s\n", command); 
+		fgetsResult = fgets(command, 100, stdin); 
+		command[strcspn(command, "\r\n")] = 0;
+		
+		//printf("Command was %s\n", command); 
 		
 		
 		/* 		identify and execute the command. 		*/
@@ -177,36 +204,38 @@ int main( int argc, char* argv[] )
 		{
 			//connect to the server 
 			printf("IPv4 Address to connect to: "); 
-			scanf("%s", address); 
-		
+	
+			char address[100]; 
+			fgets(address, 100, stdin); 
+			address[strlen(address) - 1 ] = 0; 
+
 			socketfd = createConnection( address, PORT);	
-			printf("Connected to server!\n"); 
 		}
 		else if( strcmp( command, "quit" ) == 0 )
 		{
 			//disconnect from the server
+			if( socketfd != -1)
+			{
+				close(socketfd); 
+			}
+			exit(1); 
+			
+
 		}
 		else if( strcmp( command, "pwd"  ) == 0 )
 		{
 			//print the current working directory. 
-			if(socketfd != -1)
-			{
-				sendCommand(socketfd, "PWD"); 
-			}
+			sendCommand(socketfd, "PWD"); 
 			
 		}
 		else if( strcmp( command, "cd" ) == 0 )
 		{
 			//change the current directory.
-			if(socketfd != -1)
-			{
-				sendCommand(socketfd, "CWD"); 
-			}
+			sendCommand(socketfd, "CWD"); 
 		}
 		else if( strcmp( command, "ls" ) == 0 )
 		{
 			//the the contents of the current directory. 
-
 			sendCommand(socketfd, "LST "); 
 		}
 		else if( strcmp( command, "recieve" ) == 0 ) 
@@ -214,25 +243,25 @@ int main( int argc, char* argv[] )
 			//recieve the specified file from the server. 
 			char recieveFile[100]; 	
 			char filePath[100]; 
-			FILE* file; 
 
 			sendCommand(socketfd, "RETR"); 
 		
-			printf("Name of the file to get from the server:"); 
-			scanf("%s", recieveFile); 
+			printf("Path of the file to get from the server:"); 
+			fgets(recieveFile, 100, stdin ); 
+			recieveFile[strlen(recieveFile) - 1 ] = 0; 
+			
 			if( socketfd != -1)
 			{
 				int bytesSent;
 				bytesSent = send(socketfd, recieveFile, strlen(recieveFile), 0); 
 
-				printf("\nWhere to save file?"); 
-				scanf("%s", filePath); 
-
-				file = fopen(filePath, "w"); 
+				printf("Where to save file?"); 
+			
+				fgets(filePath, 100, stdin); 
+				filePath[strlen(filePath) - 1 ] = 0; 
 	
-				recvFile(socketfd, file); 
+				recvFile(socketfd, filePath); 
 			}
-
 
 		}
 		else if( strcmp( command, "space available") == 0 )
@@ -259,16 +288,23 @@ int main( int argc, char* argv[] )
 		{
 			//rename the specifed file or directory 
 		}
-		else if( scanfResult == EOF) // ctrl + d
+		else if( fgetsResult == NULL) // ctrl + d
 		{
 			printf("Quiting now\n"); 
+
+			if( socketfd != -1)
+			{
+				close(socketfd); 
+			}
 			exit(1); 
 		}
 
-		continue; 
 	}
 
-	close(socketfd); 
+	if( socketfd != -1)
+	{
+		close(socketfd); 
+	}
 
 	return 0;
 

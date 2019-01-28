@@ -20,10 +20,6 @@
  * 1. Listen for a Connection 
  * 2. Read in a command from the connection. 
  * 3. Execute the command 
- * 		a. PWD = send the name of the working directory back to the connection 
- * 		b. CD  = change the the working directory. reply with name of new directory (?)
- * 		c. LS  = reply with a list of the contents of the working directory. 
- * 
  * 4. Otherwise reply with an error code. 
  * 5. Repeat.
  *
@@ -31,8 +27,20 @@
 
 
 /* Sends the specifed file to the specified socket. */
-int sendFile( int new_socket, FILE* inFile)
+int sendFile( int new_socket, char* filePath )
 {
+	FILE* inFile; 
+
+	//open the file for reading. 
+	inFile = fopen(filePath, "r"); 
+
+	if( !inFile )
+	{
+		fprintf(stderr, "server.sendFile: Was not able to open file (%s) for reading\n", filePath); 
+		exit(1); 
+		//send back an error code? 
+	}
+
 	//get the length of the file. 
 	fseek(inFile, 0, SEEK_END); 
 	int	fileLength = (int) ftell(inFile);  
@@ -50,9 +58,9 @@ int sendFile( int new_socket, FILE* inFile)
 	}
 
 	printf("Sent %d bytes\n", sendResult); 
+	fclose(inFile); 
 	close(new_socket); 
 	exit(0); 
-	free(buff); 
 }
 
 
@@ -125,24 +133,14 @@ int executeCommand( int socketfd, char* command )
 	//identify the command and then call it's associated function 
 	if( strcmp( command, "RETR" ) == 0)
 	{
-		FILE* file; 
-		char fileName[100]; 
+		char filePath[100]; 
 		int bytesRead;
 		//recieve the name of the file that the client wants us to send. 
 
-		bytesRead = recv( socketfd, fileName, 100, 0); 
-		
-		//check that it actually is a file. 
-		file = fopen(fileName, "r");
-		if( !file )
-		{
-			fprintf( stderr, "Was not able to open file that the client requested. File Name: %s. \n", fileName); 
-			exit(1); 
-		}
+		bytesRead = recv( socketfd, filePath, 100, 0); 
 
-		//call send File with the socket we are using, and the file the clinet wants. 
-		sendFile(socketfd, file);  
-		fclose(file); 
+		//call send File with the socket we are using, and the file the client wants. 
+		sendFile(socketfd, filePath);  
 	}
 	else if( strcmp( command, "PWD" ) == 0 ) 
 	{
@@ -170,10 +168,11 @@ int executeCommand( int socketfd, char* command )
 	}
 	else if( strcmp( command, "RNTO") == 0)
 	{
-
+		//rename to 
 	}
 	else
 	{
+		printf("Recieved a command that was not recognized %s\n", command); 
 		//command was not recognized. 
 	}
 }
@@ -246,12 +245,15 @@ int main( int argc, char* argv[] )
 			{
 				//recieve the command. 	
 				char command[4]; 
-				int bytesRecv = 0; 
+				int bytesRead = 0; 
 		
-				bytesRecv = recv(new_socket, command, 4, 0);
+				bytesRead = recv(new_socket, command, 4, 0);
 				//maybe check how many bytes are recieved. 
 
-				executeCommand(new_socket, command); 
+				if (bytesRead > 0)
+				{
+					executeCommand(new_socket, command); 
+				}
 			}
 
 		}
