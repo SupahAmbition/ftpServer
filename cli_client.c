@@ -28,7 +28,6 @@ void cli( int socketfd,  char** args )
 		}
 		exit(1); 
 	}
-
 	// connect (address)
 	else if( strcmp( command, "connect" ) == 0 )
 	{
@@ -40,11 +39,6 @@ void cli( int socketfd,  char** args )
 		{
 			printf("Was not able to connect to %s\n", address ); 
 		}
-	}
-	// quit or ctrl+d
-	else if( strcmp( command, "help" ) == 0 )
-	{
-		//print the list of commands. 
 	}
 	// pwd 
 	else if( strcmp( command, "pwd"  ) == 0 )
@@ -118,8 +112,36 @@ void cli( int socketfd,  char** args )
 	{
 		//rename the specifed file or directory 
 	}
+	// help 
+	else if( strcmp( command, "help" ) == 0 )
+	{
+		//print the list of commands. 
+		char* helpString; 
+
+		helpString = "Usage client [Address]."  
+					  "\nCOMMANDS:" 
+					  "\n\t quit \t\t\t- Disconnect from the server and exit the client." 
+					  "\n\t connect (address) \t- Connect to a FTP server specifed at the given addres. "
+					  "\n\t pwd \t\t\t- Print the current working directory on the server. " 
+					  "\n\t cd (path) \t\t- Change the directory on the server to the specified path. "
+					  "\n\t ls \t\t\t- List the contents of the working directory on the server. "
+					  "\n\t recieve (file) [path]\t- Recieve a file that is hosted on the server. "
+					  "\n\t\t\t\t The first argument is file you want to recieve, "
+				      "\n\t\t\t\t and the second argument is an option to specify "
+					  "\n\t\t\t\t where the file should be saved to. "
+					  "\n\t space \t\t\t- Get the disk space available on the server. "
+					  "\n\t mkdir \t\t\t- Create a directory on the server." 
+					  "\n\t undo \t\t\t- Undo the last command."
+					  "\n\t rename (path) (new)\t- Rename the specifed file. "
+					  "\n\t help \t\t\t- displays this help message "; 
+
+		printf( "%s\n", helpString ); 
+	}
 
 }
+
+
+
 
 #define CLI_BUFFSIZE 1024 
 char* readline()
