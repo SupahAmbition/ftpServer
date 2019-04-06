@@ -6,11 +6,10 @@ all: client server
 
 
 client: ftpClient.o
-	$(CC) $(CLFAGS) ftpClient.o -o client -lpthread
+	$(CC) $(CLFAGS) ftpClient.o -o client -lpthread  -g 
 
 server: ftpServer.o
-	$(CC) $(CLFAGS) ftpServer.o -o server -lpthread
-
+	$(CC) $(CLFAGS) ftpServer.o -o server -lpthread -g
 
 clean: 
 	rm -rf *.o

@@ -24,7 +24,6 @@ int sendCommand(int socketfd, char* command)
 	}
 
 	int length = strlen(command); 
-
 	int sendResult = send( socketfd, command, length, 0); 
 
 	if( sendResult == -1)
@@ -32,25 +31,11 @@ int sendCommand(int socketfd, char* command)
 		perror("sendCommand"); 
 	}
 	//printf("Send command %s\n", command); 
-
 }	
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Recieve a file from the server, 
- * reads in only 1024 bytes at a time */
+// Recieve a file from the server, 
+// reads in only 1024 bytes at a time 
 int recvFile( int socketfd, char* filePath )
 {
 	FILE* outFile; 
@@ -86,9 +71,11 @@ int recvFile( int socketfd, char* filePath )
 }
 
 
-/* This function will create a socket and bind it
+/* 
+ * This function will create a socket and bind it
  * to the specified address on port 20.  
- * it will return a the socketfd that was successfully created   */
+ * it will return a the socketfd that was successfully created   
+ */
 int createConnection( char* address,  char* port )
 {
 
@@ -145,168 +132,216 @@ int createConnection( char* address,  char* port )
 
 }
 
+void cli( int socketfd,  char** args )
+{
+	//printf("Command was %s\n", command); 
+
+	char* command = args[0]; 
+
+
+	// Identify and execute the command. 
+	if (command == NULL || strcmp( command, "quit" ) == 0  )
+	{
+
+	 	printf("Quiting now\n"); 
+		
+		//disconnect from the server
+		if( socketfd != -1)
+		{
+			close(socketfd); 
+		}
+		exit(1); 
+	}
+
+	// connect (address)
+	else if( strcmp( command, "connect" ) == 0 )
+	{
+		//connect to the server 
+		
+		char* address  = args[1]; 
+		socketfd = createConnection( address, PORT);	
+	}
+	// quit or ctrl+d
+	else if( strcmp( command, "help" ) == 0 )
+	{
+		//print the list of commands. 
+	}
+	// pwd 
+	else if( strcmp( command, "pwd"  ) == 0 )
+	{
+		//print the current working directory. 
+		sendCommand(socketfd, "PWD"); 
+		
+	}
+	// cd (new directory) 
+	else if( strcmp( command, "cd" ) == 0 )
+	{
+		//change the current directory.
+		sendCommand(socketfd, "CWD"); 
+	}
+	// ls
+	else if( strcmp( command, "ls" ) == 0 )
+	{
+		//the the contents of the current directory. 
+		sendCommand(socketfd, "LST "); 
+	}
+	
+	// recieve (path of file to recieve) (location to save file) 
+	else if( strcmp( command, "recieve" ) == 0 ) 
+	{
+		//recieve the specified file from the server. 
+		char* recieveFile = args[1]; 	
+		char* filePath = args[2]; 
+
+		sendCommand(socketfd, "RETR"); 
+		
+		if( socketfd != -1)
+		{
+			int bytesSent;
+			bytesSent = send(socketfd, recieveFile, strlen(recieveFile), 0); 
+			
+			recvFile(socketfd, filePath); 
+		}
+
+		free( recieveFile ); 
+		free( filePath ); 
+	}
+	// space 
+	else if( strcmp( command, "space") == 0 )
+	{
+		//get the disk space available on the server. 
+		
+		sendCommand( socketfd, "SIZE"); 
+	}
+	// clear 
+	else if( strcmp( command, "clear" ) == 0 )
+	{
+		//clear the screen 
+		//system("cls");  <--- windows 
+		system("clear");  // <--- Unix 
+	}
+	
+	//mkdir
+	else if( strcmp( command, "mkdir" ) == 0 ) 
+	{
+		//create a directory. 
+	}
+
+	//undo 
+	else if( strcmp( command, "undo" ) == 0 )
+	{
+		// undo the last command  ?
+	}
+
+	//rename
+	else if( strcmp( command, "rename" ) == 0) 
+	{
+		//rename the specifed file or directory 
+	}
+
+}
+
+#define CLI_BUFFSIZE 1024 
+char* readline()
+{
+	int buffsize = CLI_BUFFSIZE;  
+	int position = 0; 
+	char* buffer = malloc( sizeof(char) * buffsize ); 
+	int c; 
+
+
+	if (!buffer) 
+	{
+    	fprintf(stderr, "ftpclient_cli: allocation error\n");
+    	exit(1);
+	}
+	
+	while(1) 
+	{
+		c = getchar(); 
+		if( c == EOF || c == '\n' )
+		{
+			buffer[position] = '\0';
+			return buffer;
+		}
+		else{ buffer[position] = c;  }
+
+		position++; 
+
+		//check if we need to reallocate 
+		if( position >= buffsize ) 
+		{
+			buffsize = buffsize + CLI_BUFFSIZE; 
+			buffer = realloc(buffer, buffsize); 
+
+			if( !buffer )
+			{
+				fprintf(stderr, "ftpclient_cli: allocation error\n");
+				exit(1);
+			}
+		}
+	}
+}
+
+
+#define CLI_TOK_BUFFSIZE 64
+#define CLI_TOK_DELIM " \t\r\n\a"
+char** splitline(char* line)
+{
+	int buffsize = CLI_BUFFSIZE; 
+	int position = 0; 
+	char** tokens = malloc( buffsize * sizeof(char*) );
+	char* token; 
+
+	token = strtok( line, CLI_TOK_DELIM ); 
+	while( token != NULL) 
+	{
+		tokens[position] = token; 
+		position++; 
+
+		if( position >= buffsize )
+		{
+			buffsize = buffsize + CLI_TOK_BUFFSIZE; 
+			tokens = realloc( tokens, buffsize * sizeof(char*) ); 
+			if( !tokens )
+			{
+				fprintf(stderr, "ftpclient_cli: allocation error\n");
+				exit(1);
+			}
+		}
+		token = strtok(NULL, CLI_TOK_DELIM); 
+	}
+	tokens[position] = NULL; 
+	return tokens; 
+}	
+
+
 
 int main( int argc, char* argv[] )
 {
 	FILE* outFile; 
 	char* address; 
 	int socketfd; 
-	
+
 	address = argv[1]; 
-
-	/* GNU GETOPT USEAGE  */ 
-	/* 	./client address [flags] */ 
-	int opt;
-	while ( (opt = getopt(argc, argv, "o:") ) != -1)
-	{
-		printf("Option is: %c \n", opt); 
-		printf("Optarg is: %s \n", optarg); 
-		printf("argv[1] is: %s \n", argv[1]); 
-		switch (opt)
-		{
-			case 'o': 
-
-				outFile = fopen(optarg, "w"); 
-
-				if( !outFile )
-				{
-					fprintf( stderr, "Failed to create the file %s. \n", optarg); 
-					exit(1); 
-				}
-				break; 
-
-		 	default: 
-				 printf("%c is not an option", opt); 
-				 break; 
-		}
-	}
+	socketfd = createConnection( address, PORT); 
 
 	//iteractive command line loop
-	while( 1 ) 
+	while(1)
 	{
-		char command[100]; 
-		char* fgetsResult; 
-		
+		char* line; 
+		char** args; 
 		
 		printf("<ftpClient>"); 
-		fgetsResult = fgets(command, 100, stdin); 
-		command[strcspn(command, "\r\n")] = 0;
-		
-		//printf("Command was %s\n", command); 
-		
-		
-		/* 		identify and execute the command. 		*/
-		if (strcmp( command, "help" ) == 0)
-		{
-			//print the list of commands. 
-		}
-		else if( strcmp( command, "connect" ) == 0 )
-		{
-			//connect to the server 
-			printf("IPv4 Address to connect to: "); 
-	
-			char address[100]; 
-			fgets(address, 100, stdin); 
-			address[strlen(address) - 1 ] = 0; 
+		line = readline(); 
+		args = splitline(line); 
 
-			socketfd = createConnection( address, PORT);	
-		}
-		else if( strcmp( command, "quit" ) == 0 )
-		{
-			//disconnect from the server
-			if( socketfd != -1)
-			{
-				close(socketfd); 
-			}
-			exit(1); 
-			
+		//execute the given command. 
+		cli(socketfd, args); 
 
-		}
-		else if( strcmp( command, "pwd"  ) == 0 )
-		{
-			//print the current working directory. 
-			sendCommand(socketfd, "PWD"); 
-			
-		}
-		else if( strcmp( command, "cd" ) == 0 )
-		{
-			//change the current directory.
-			sendCommand(socketfd, "CWD"); 
-		}
-		else if( strcmp( command, "ls" ) == 0 )
-		{
-			//the the contents of the current directory. 
-			sendCommand(socketfd, "LST "); 
-		}
-		else if( strcmp( command, "recieve" ) == 0 ) 
-		{
-			//recieve the specified file from the server. 
-			char recieveFile[100]; 	
-			char filePath[100]; 
-
-			sendCommand(socketfd, "RETR"); 
-		
-			printf("Path of the file to get from the server:"); 
-			fgets(recieveFile, 100, stdin ); 
-			recieveFile[strlen(recieveFile) - 1 ] = 0; 
-			
-			if( socketfd != -1)
-			{
-				int bytesSent;
-				bytesSent = send(socketfd, recieveFile, strlen(recieveFile), 0); 
-
-				printf("Where to save file?"); 
-			
-				fgets(filePath, 100, stdin); 
-				filePath[strlen(filePath) - 1 ] = 0; 
-	
-				recvFile(socketfd, filePath); 
-			}
-
-		}
-		else if( strcmp( command, "space available") == 0 )
-		{
-			//get the disk space available on the server. 
-			
-			sendCommand( socketfd, "SIZE"); 
-		}
-		else if( strcmp( command, "clear" ) == 0 )
-		{
-			//clear the screen 
-			//system("cls");  <--- windows 
-			system("clear");  // <--- Unix 
-		}
-		else if( strcmp( command, "mkdir" ) == 0 ) 
-		{
-			//create a directory. 
-		}
-		else if( strcmp( command, "undo" ) == 0 )
-		{
-			// undo the last command 
-		}
-		else if( strcmp( command, "rename" ) == 0) 
-		{
-			//rename the specifed file or directory 
-		}
-		else if( fgetsResult == NULL) // ctrl + d
-		{
-			printf("Quiting now\n"); 
-
-			if( socketfd != -1)
-			{
-				close(socketfd); 
-			}
-			exit(1); 
-		}
-
-	}
-
-	if( socketfd != -1)
-	{
-		close(socketfd); 
-	}
-
+		free(line); 
+		free(args); 
+	} 
 	return 0;
-
 }
 
