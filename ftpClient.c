@@ -70,6 +70,14 @@ int recvFile( int socketfd, char* filePath )
 	return 0; 
 }
 
+// 1 for valid IP. 
+int validateIpAddr( char* ipAddr )
+{
+	struct sockaddr_in sa; 
+	int result = inet_pton( AF_INET, ipAddr, &(sa.sin_addr) ); 
+	return result;
+}
+
 
 /* 
  * This function will create a socket and bind it
@@ -78,6 +86,12 @@ int recvFile( int socketfd, char* filePath )
  */
 int createConnection( char* address,  char* port )
 {
+
+	if( validateIpAddr( address ) < 1 )
+	{
+		fprintf(stderr, "Address: %s is not a correctly formated IP address\n", address ); 
+		return -1; 
+	}
 
 	int socketfd; 
 	struct addrinfo hints,  *servinfo, *p;

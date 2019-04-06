@@ -19,7 +19,6 @@ void cli( int socketfd,  char** args )
 	// Identify and execute the command. 
 	if (command == NULL || strcmp( command, "quit" ) == 0  )
 	{
-
 	 	printf("Quiting now\n"); 
 		
 		//disconnect from the server
@@ -205,7 +204,7 @@ int main( int argc, char* argv[] )
 	int socketfd; 
 
 	address = argv[1]; 
-	socketfd = createConnection( address, PORT); 
+	//socketfd = createConnection( address, PORT); 
 
 	//iteractive command line loop
 	while(1)
