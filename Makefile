@@ -5,8 +5,8 @@ CFLAGS= -pipe -g
 all: client server
 
 
-client: ftpClient.o
-	$(CC) $(CLFAGS) ftpClient.o -o client -lpthread  -g 
+client: cli_client.o ftpClient.o
+	$(CC) $(CLFAGS) ftpClient.o cli_client.o -o client -lpthread  -g 
 
 server: ftpServer.o
 	$(CC) $(CLFAGS) ftpServer.o -o server -lpthread -g
