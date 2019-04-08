@@ -14,24 +14,144 @@
 #define PORT "20"
 
 
-
-int sendCommand(int socketfd, char* command)
+/*
+ *
+ * Sends a header block, followed by the accomponing 
+ * Data blocks.
+ *
+ * Returns -1 on failue. 
+ *
+ */
+int sendCommand(int socketfd, int command_code , char** args)
 {
+
+	uint32_t header; 
+	char* data = args[0];
+	
 	if(socketfd == -1)
 	{
 		fprintf(stderr, "Was not able to send command because socket was invalid\n"); 
-		exit(1);
+		return -1;
+	}
+	if( args[0] == NULL )
+	{
+		fprintf(stderr, "client.sendCommand(): command string missing.\n"); 
+		return -1; 
 	}
 
-	int length = strlen(command); 
-	int sendResult = send( socketfd, command, length, 0); 
+	switch(command_code)
+	{
+		// pwd
+		case 4: 
+			header = packHeader( 3, 4 ); 
+			break;
+		
+		// cd (path) 
+		case 5: 
+			strcat( data, args[1] ); 
+			header = packHeader( 3, strlen(data) );  
+			break; 
+		
+		// ls
+		case 6: 
+			header = packHeader(3, 4); 
+			break;
+		
+		// retr (file) [path]
+		case 7: 
+			strcat( data, args[1] ); 
+			
+			if( args[2] != NULL )
+			{
+				strcat(data, args[2] ); 
+			}
+			
+			header = packHeader( 3, strlen( data ) ); 
+			break; 
+	
+		// space
+		case 8:
+			header = packHeader(3, 4); 
+			break; 
+	
+		// mkdir (path) 
+		case 9: 
+			strcat( data, args[1] ); 
+			packHeader(3, strlen( data ) ); 
+			break;
+		
+		// undo
+		case 10: 
+			header = packHeader(3, 4); 
+			break;
+		
+		// help 
+		case 12: 
+			header = packHeader(3, 4); 
+			break;
+		
+		default: 
+			fprintf(stderr, "Did not recognize command %s.\n", args[0]); 
+			return -1; 
+	}
+			
 
-	if( sendResult == -1)
+	//send header
+	int headerResult = send( socketfd, header, sizeof(header), 0 ); 
+	if( headerResult > 0 )
+	{
+		int bytesSent = send( socketfd, data, strlen(data) * sizeof(char), 0); 
+	}
+
+	//read a response. 
+	if( bytesSent > 0 )
+	{
+		uint32_t status; 
+		int bytesRead = recv( socketfd, status, sizeof(status), 0 ); 
+	}
+
+	if( bytesSent == -1 || bytesRead == -1 )
 	{
 		perror("sendCommand"); 
 	}
-	//printf("Send command %s\n", command); 
+	
+	free(data);
+
+	return status;
 }	
+
+
+/*
+ * Packs the header block for an exchange between server and client. 
+ * Can account for max 2**24 data bytes at a time. 
+ *
+ * packHeader(3, 4) - creates the header for 
+ * 	a command data block with no arguments. 
+ *
+ * Descriptor Codes: 
+ * 0000 = Null
+ * 0001 = Status Request 
+ * 0010 = Status Response
+ * 0011 = Command Data 
+ * 0100 = File Data
+ */
+uint32_t packHeader( unsigned short descriptor, int dataLength )
+{
+	if( dataLength > (1 << 24)  )
+	{
+		fprintf(stderr, "Header Creation Error: Send only < 2**24 bytes at time.\n"); 
+		return -1; 
+	}
+
+	uint32_t result = descriptor; 
+
+	//move descriptor to the 8 most significant bits. 
+	result = result << 24; 
+	result = result | dataLength; 
+
+	return htonl(result); 
+}
+
 
 
 // Recieve a file from the server, 
@@ -48,9 +168,9 @@ int recvFile( int socketfd, char* filePath )
 
 	if( !outFile )
 	{
-		char defaultPath[] = "./recieve/default.txt";  
+		char* defaultPath = "./recieve/default.txt";  
 
-		printf("client.sendFile: Was not able to open file (%s) for writing\n", filePath);
+		printf("client.recvFile: Was not able to open file (%s). \n", filePath);
 		printf("Opening %s for writing instead", defaultPath );  
 
 		outFile = fopen(defaultPath, "w"); 
@@ -67,6 +187,7 @@ int recvFile( int socketfd, char* filePath )
 	}
 
 	fclose(outFile); 
+	free(buff); 
 	return 0; 
 }
 

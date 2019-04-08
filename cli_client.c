@@ -15,8 +15,10 @@ void cli( int socketfd,  char** args )
 
 	char* command = args[0]; 
 
-
-	// Identify and execute the command. 
+	// ====  Identify and execute the command.  ========
+	//
+	//
+	// 1.  Quit
 	if (command == NULL || strcmp( command, "quit" ) == 0  )
 	{
 	 	printf("Quiting now\n"); 
@@ -26,13 +28,18 @@ void cli( int socketfd,  char** args )
 		{
 			close(socketfd); 
 		}
-		exit(1); 
+		exit(0); 
 	}
-	// connect (address)
+	// 2. clear 
+	else if( strcmp( command, "clear" ) == 0 )
+	{
+		//clear the screen 
+		//system("cls");  <--- windows 
+		system("clear");  // <--- Unix 
+	}
+	// 3. connect (address)
 	else if( strcmp( command, "connect" ) == 0 )
 	{
-		//connect to the server 
-		
 		char* address  = args[1]; 
 		socketfd = createConnection( address, PORT);	
 		if( socketfd = -1 )
@@ -40,79 +47,54 @@ void cli( int socketfd,  char** args )
 			printf("Was not able to connect to %s\n", address ); 
 		}
 	}
-	// pwd 
+	// 4. pwd  
 	else if( strcmp( command, "pwd"  ) == 0 )
 	{
-		//print the current working directory. 
-		sendCommand(socketfd, "PWD"); 
+		args[0] = "PWD0"; 
+		sendCommand(socketfd, 4, args); 
 		
 	}
-	// cd (new directory) 
+	// 5. cd (new directory) 
 	else if( strcmp( command, "cd" ) == 0 )
 	{
-		//change the current directory.
-		sendCommand(socketfd, "CWD"); 
+		args[0] = "CWD0"; 
+		sendCommand(socketfd, 5, args); 
 	}
-	// ls
+	// 6. ls
 	else if( strcmp( command, "ls" ) == 0 )
 	{
-		//the the contents of the current directory. 
-		sendCommand(socketfd, "LST "); 
+		args[0] = "LST0"; 
+		sendCommand(socketfd, 6, args); 
 	}
 	
-	// recieve (path of file to recieve) (location to save file) 
-	else if( strcmp( command, "recieve" ) == 0 ) 
+	// 7. recieve (path of file to recieve) (location to save file) 
+	else if( strcmp( command, "retrieve" ) == 0 ) 
 	{
-		//recieve the specified file from the server. 
-		char* recieveFile = args[1]; 	
-		char* filePath = args[2]; 
-
-		sendCommand(socketfd, "RETR"); 
-		
-		if( socketfd != -1)
-		{
-			int bytesSent;
-			bytesSent = send(socketfd, recieveFile, strlen(recieveFile), 0); 
-			
-			recvFile(socketfd, filePath); 
-		}
-
-		free( recieveFile ); 
-		free( filePath ); 
+		args[0] = "RETR"; 
+		sendCommand(socketfd, 7, args); 
 	}
-	// space 
+	// 8. space 
 	else if( strcmp( command, "space") == 0 )
 	{
-		//get the disk space available on the server. 
-		
-		sendCommand( socketfd, "SIZE"); 
-	}
-	// clear 
-	else if( strcmp( command, "clear" ) == 0 )
-	{
-		//clear the screen 
-		//system("cls");  <--- windows 
-		system("clear");  // <--- Unix 
+		args[0] = "SIZE";
+		sendCommand( socketfd, 8, args); 
 	}
 	
-	//mkdir
+	// 9. mkdir
 	else if( strcmp( command, "mkdir" ) == 0 ) 
 	{
-		//create a directory. 
+		args[0] = "MKDR"; 
+		sendCommand( socketfd, 9, args); 
 	}
 
-	//undo 
+	// 10. undo 
 	else if( strcmp( command, "undo" ) == 0 )
 	{
 		// undo the last command  ?
+		args[0] = "UNDO"; 
+		sendCommand( socketfd, 10, args); 
 	}
-
-	//rename
-	else if( strcmp( command, "rename" ) == 0) 
-	{
-		//rename the specifed file or directory 
-	}
-	// help 
+	// 12. help 
 	else if( strcmp( command, "help" ) == 0 )
 	{
 		//print the list of commands. 
@@ -125,7 +107,7 @@ void cli( int socketfd,  char** args )
 					  "\n\t pwd \t\t\t- Print the current working directory on the server. " 
 					  "\n\t cd (path) \t\t- Change the directory on the server to the specified path. "
 					  "\n\t ls \t\t\t- List the contents of the working directory on the server. "
-					  "\n\t recieve (file) [path]\t- Recieve a file that is hosted on the server. "
+					  "\n\t retrieve (file) [path]\t- Recieve a file that is hosted on the server. "
 					  "\n\t\t\t\t The first argument is file you want to recieve, "
 				      "\n\t\t\t\t and the second argument is an option to specify "
 					  "\n\t\t\t\t where the file should be saved to. "

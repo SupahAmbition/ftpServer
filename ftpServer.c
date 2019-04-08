@@ -127,7 +127,7 @@ int createConnection(char* port )
 	}
 }
 
-int executeCommand( int socketfd, char* command )
+int executeCommand( int socketfd, char* command, char** args)
 {
 
 	//identify the command and then call it's associated function 
@@ -144,7 +144,7 @@ int executeCommand( int socketfd, char* command )
 	}
 	else if( strcmp( command, "PWD" ) == 0 ) 
 	{
-
+		
 	}
 	else if( strcmp( command, "CWD") == 0 )
 	{
