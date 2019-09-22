@@ -1,6 +1,6 @@
 # Tyler's File Transfer Protocol Server 
 
-This is a project maintained by Tyler Beverley (SupahAmbition) and Tyler Reiland (tylerreiland).   
+This is a project maintained by Tyler Beverley (SupahAmbition).
 Currently the program is seperated into two, a server and a client application. In the future we will combine these two to be one program.   
 
 Status of this Project: 
