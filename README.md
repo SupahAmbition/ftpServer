@@ -3,6 +3,9 @@
 This is a project maintained by Tyler Beverley (SupahAmbition) and Tyler Reiland (tylerreiland).   
 Currently the program is seperated into two, a server and a client application. In the future we will combine these two to be one program.   
 
+Status of this Project: 
+Development is on hold for now, the program is able to transfer files over the network, but other File transfer protocol features such as renaming files over the network have not been implemented. My goal was to learn how files were transfered over the network, which I believe I have achieved. 
+
 
 ## FILES 
 * ftpclient.c	->  Run this program on the machine you want to recieve the file. 
